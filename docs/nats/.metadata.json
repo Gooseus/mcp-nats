@@ -1,0 +1,42 @@
+{
+  "subjects": {
+    "etag": "W/\"5f8694d84da8f3bd78213b656b7c6d4257819a79467def4e1bf1c3927430191d\"",
+    "fetchedAt": "2025-12-11T16:09:48.657Z"
+  },
+  "kv": {
+    "etag": "W/\"d95cce340c4cf1b513cb3f24cff7bd6e20ceb5dba606dd4310c53dd7ad6990d9\"",
+    "fetchedAt": "2025-12-11T16:09:48.851Z"
+  },
+  "jetstream": {
+    "etag": "W/\"9d67bf275fa4756da92dc2015f2f274b124ba0ec1a0f42f69cae5983d8e89ab6\"",
+    "fetchedAt": "2025-12-11T16:09:48.810Z"
+  },
+  "acks": {
+    "etag": "W/\"70c4e1e81df225560e159d9f43efebeb809c632c2002909f3a7467fa253aa473\"",
+    "fetchedAt": "2025-12-11T16:09:48.666Z"
+  },
+  "streams": {
+    "etag": "W/\"176db69952a88dd4f99cb80bcedd6c59d56785a083ad283fa1b5f1392fff6dce\"",
+    "fetchedAt": "2025-12-11T16:09:48.821Z"
+  },
+  "consumers": {
+    "etag": "W/\"72967c552f52c5e2ad46731e6fdc0d634076ade00c51abd23433564cf0b13142\"",
+    "fetchedAt": "2025-12-11T16:09:48.836Z"
+  },
+  "headers": {
+    "etag": "W/\"975d968da73d376bf7d640d818dd5546854d3f62ac34c2c88e4f1906693e1a95\"",
+    "fetchedAt": "2025-12-11T16:09:48.842Z"
+  },
+  "objectstore": {
+    "etag": "W/\"17afac5c33be69aab574b3b7e80ddc357e11e75302b33a2f1edb75a29f7e60b3\"",
+    "fetchedAt": "2025-12-11T16:09:48.859Z"
+  },
+  "pubsub": {
+    "etag": "W/\"0a7e002875e96ea5b1049af588f8afda3d3e93fd80df29c6f0db4f47ec71814c\"",
+    "fetchedAt": "2025-12-11T16:09:48.735Z"
+  },
+  "reqreply": {
+    "etag": "W/\"7b90fb580c412a643a311f58124a9ded16d1d1fd0f6b07c4fa2d58d9dbec1bca\"",
+    "fetchedAt": "2025-12-11T16:09:48.801Z"
+  }
+}
