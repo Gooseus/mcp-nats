@@ -17,8 +17,9 @@ import { registerServerResources } from "./resources/server.js";
 import { registerDocsResources } from "./resources/docs.js";
 import { createSseServer, type SseServer } from "./transports/sse.js";
 import { logError, SERVICE_NAME, formatError } from "./utils.js";
+import pkg from "../package.json" with { type: "json" };
 
-const VERSION = "0.1.0";
+const VERSION = pkg.version;
 const USAGE_TEXT = `
 NATS MCP Server
 
