@@ -1,5 +1,11 @@
 # NATS MCP Server
 
+[![npm version](https://img.shields.io/npm/v/mcp-nats.svg)](https://www.npmjs.com/package/mcp-nats)
+[![npm downloads](https://img.shields.io/npm/dm/mcp-nats.svg)](https://www.npmjs.com/package/mcp-nats)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/node/v/mcp-nats.svg)](https://nodejs.org)
+[![CI](https://github.com/Gooseus/mcp-nats/actions/workflows/publish.yml/badge.svg)](https://github.com/Gooseus/mcp-nats/actions/workflows/publish.yml)
+
 An MCP (Model Context Protocol) server that exposes NATS messaging capabilities to LLMs like Claude. This enables AI assistants to interact with NATS messaging infrastructure - publishing messages, subscribing, performing request-reply operations, managing JetStream streams and consumers, and working with Key-Value stores.
 
 ## Features
