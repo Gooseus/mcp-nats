@@ -312,10 +312,17 @@ Once connected to Claude Desktop, you can ask Claude to:
 - "Send a request to 'api.users.get' and wait for a response"
 - "Read the NATS documentation on JetStream consumers"
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+- **Bug reports & feature requests**: [Open an issue](https://github.com/Gooseus/mcp-nats/issues)
+- **Questions & discussions**: [GitHub Discussions](https://github.com/Gooseus/mcp-nats/discussions)
+
 ## License
 
-MIT
+[MIT](LICENSE)
 
 ## Author
 
-Shawn Marincas
+Shawn Marincas ([@Gooseus](https://github.com/Gooseus))
