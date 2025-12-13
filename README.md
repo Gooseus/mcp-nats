@@ -27,21 +27,21 @@ An MCP (Model Context Protocol) server that exposes NATS messaging capabilities 
 No installation needed - run directly:
 
 ```bash
-npx nats-mcp
+npx mcp-nats
 ```
 
 ### Install globally
 
 ```bash
-npm install -g nats-mcp
-nats-mcp
+npm install -g mcp-nats
+mcp-nats
 ```
 
 ### From source (for development)
 
 ```bash
-git clone https://github.com/Gooseus/nats-mcp.git
-cd nats-mcp
+git clone https://github.com/Gooseus/mcp-nats.git
+cd mcp-nats
 bun install
 bun run start
 ```
@@ -56,10 +56,10 @@ docker run -p 4222:4222 nats:latest -js
 2. Run the MCP server:
 ```bash
 # Via npx
-npx nats-mcp
+npx mcp-nats
 
 # Or if installed globally
-nats-mcp
+mcp-nats
 
 # Or from source
 bun run start
@@ -67,13 +67,13 @@ bun run start
 
 3. Or run with HTTP/SSE transport for network access:
 ```bash
-npx nats-mcp --transport=sse --port=3000
+npx mcp-nats --transport=sse --port=3000
 # Server will be available at http://localhost:3000/mcp
 ```
 
 4. Test with MCP Inspector:
 ```bash
-npx @modelcontextprotocol/inspector npx nats-mcp
+npx @modelcontextprotocol/inspector npx mcp-nats
 ```
 
 ## Configuration
@@ -111,7 +111,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
   "mcpServers": {
     "nats": {
       "command": "npx",
-      "args": ["nats-mcp"],
+      "args": ["mcp-nats"],
       "env": {
         "NATS_URL": "nats://localhost:4222"
       }
@@ -126,7 +126,7 @@ Or if installed globally:
 {
   "mcpServers": {
     "nats": {
-      "command": "nats-mcp",
+      "command": "mcp-nats",
       "env": {
         "NATS_URL": "nats://localhost:4222"
       }
@@ -142,7 +142,7 @@ Or from source with Bun:
   "mcpServers": {
     "nats": {
       "command": "bun",
-      "args": ["/absolute/path/to/nats-mcp/src/index.ts"],
+      "args": ["/absolute/path/to/mcp-nats/src/index.ts"],
       "env": {
         "NATS_URL": "nats://localhost:4222"
       }

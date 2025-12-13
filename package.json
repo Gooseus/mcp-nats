@@ -1,11 +1,11 @@
 {
-  "name": "nats-mcp",
+  "name": "mcp-nats",
   "version": "0.1.0",
   "description": "MCP server for NATS messaging - publish, subscribe, JetStream, and KV operations",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "nats-mcp": "./dist/index.js"
+    "mcp-nats": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -51,6 +51,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Gooseus/nats-mcp"
+    "url": "https://github.com/Gooseus/mcp-nats"
   }
 }
