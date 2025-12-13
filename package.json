@@ -40,6 +40,9 @@
   ],
   "author": "Shawn Marincas",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "nats": "^2.29.3",

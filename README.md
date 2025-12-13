@@ -22,7 +22,7 @@ An MCP (Model Context Protocol) server that exposes NATS messaging capabilities 
 
 ## Requirements
 
-- Node.js 18+ (or [Bun](https://bun.sh/) for development)
+- Node.js 20+ (or [Bun](https://bun.sh/) for development)
 - NATS server with JetStream enabled
 - Docker (optional, for running tests)
 
