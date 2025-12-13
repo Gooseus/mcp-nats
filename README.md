@@ -16,18 +16,34 @@ An MCP (Model Context Protocol) server that exposes NATS messaging capabilities 
 
 ## Requirements
 
-- [Bun](https://bun.sh/) runtime (recommended) or Node.js 20+
+- Node.js 18+ (or [Bun](https://bun.sh/) for development)
 - NATS server with JetStream enabled
-- Docker (for running tests)
+- Docker (optional, for running tests)
 
 ## Installation
 
-```bash
-# Install dependencies
-bun install
+### Via npx (recommended)
 
-# Or with npm
-npm install
+No installation needed - run directly:
+
+```bash
+npx nats-mcp
+```
+
+### Install globally
+
+```bash
+npm install -g nats-mcp
+nats-mcp
+```
+
+### From source (for development)
+
+```bash
+git clone https://github.com/Gooseus/nats-mcp.git
+cd nats-mcp
+bun install
+bun run start
 ```
 
 ## Quick Start
@@ -37,20 +53,27 @@ npm install
 docker run -p 4222:4222 nats:latest -js
 ```
 
-2. Run the MCP server (stdio mode for Claude Desktop):
+2. Run the MCP server:
 ```bash
+# Via npx
+npx nats-mcp
+
+# Or if installed globally
+nats-mcp
+
+# Or from source
 bun run start
 ```
 
 3. Or run with HTTP/SSE transport for network access:
 ```bash
-bun run start:sse
+npx nats-mcp --transport=sse --port=3000
 # Server will be available at http://localhost:3000/mcp
 ```
 
-4. Or test with MCP Inspector:
+4. Test with MCP Inspector:
 ```bash
-bun run inspector
+npx @modelcontextprotocol/inspector npx nats-mcp
 ```
 
 ## Configuration
@@ -87,8 +110,8 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 {
   "mcpServers": {
     "nats": {
-      "command": "bun",
-      "args": ["/absolute/path/to/nats-mcp/src/index.ts"],
+      "command": "npx",
+      "args": ["nats-mcp"],
       "env": {
         "NATS_URL": "nats://localhost:4222"
       }
@@ -97,14 +120,29 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-Or if using the built version with Node.js:
+Or if installed globally:
 
 ```json
 {
   "mcpServers": {
     "nats": {
-      "command": "node",
-      "args": ["/absolute/path/to/nats-mcp/dist/index.js"],
+      "command": "nats-mcp",
+      "env": {
+        "NATS_URL": "nats://localhost:4222"
+      }
+    }
+  }
+}
+```
+
+Or from source with Bun:
+
+```json
+{
+  "mcpServers": {
+    "nats": {
+      "command": "bun",
+      "args": ["/absolute/path/to/nats-mcp/src/index.ts"],
       "env": {
         "NATS_URL": "nats://localhost:4222"
       }

@@ -7,12 +7,18 @@
   "bin": {
     "nats-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "docs",
+    "README.md"
+  ],
   "scripts": {
     "start": "bun run src/index.ts",
     "start:sse": "bun run src/index.ts --transport=sse --port=3000",
     "dev": "bun --watch run src/index.ts",
     "dev:sse": "bun --watch run src/index.ts --transport=sse --port=3000",
-    "build": "bun build src/index.ts --outdir dist --target node",
+    "build": "bun build src/index.ts --outdir dist --target node && sed -i '' '1s|#!/usr/bin/env bun|#!/usr/bin/env node|' dist/index.js",
+    "prepublishOnly": "npm run build",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:up": "docker compose up -d",
