@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/Gooseus/mcp-nats/compare/mcp-nats-v0.1.6...mcp-nats-v0.1.7) (2025-12-16)
+
+
+### Bug Fixes
+
+* consolidate release and publish into single workflow ([b825769](https://github.com/Gooseus/mcp-nats/commit/b8257697ea78fc2e4482de3237e37a0b2fa1f79e))
+
 ## [0.1.6](https://github.com/Gooseus/mcp-nats/compare/mcp-nats-v0.1.5...mcp-nats-v0.1.6) (2025-12-16)
 
 
