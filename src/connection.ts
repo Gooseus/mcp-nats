@@ -161,29 +161,6 @@ export function getNatsConnection(): NatsConnectionBundle {
   return { nc: state.nc, js: state.js, jsm: state.jsm };
 }
 
-// Async version for cases that need guaranteed fresh JetStream clients
-export async function getNatsConnectionAsync(): Promise<NatsConnectionBundle> {
-  if (!state.nc) {
-    throw new NatsConnectionError("NATS connection not initialized. Call createNatsConnection first.");
-  }
-
-  if (!state.isConnected) {
-    throw new NatsConnectionError("NATS connection is disconnected. Reconnection in progress...");
-  }
-
-  // Refresh JetStream clients if needed
-  if (!state.js) {
-    state.js = state.nc.jetstream();
-  }
-
-  if (!state.jsm) {
-    state.jsm = await state.nc.jetstreamManager();
-    logStatus("JetStreamManager refreshed after reconnection");
-  }
-
-  return { nc: state.nc, js: state.js, jsm: state.jsm };
-}
-
 export function getConnectionHealth(): ConnectionHealth {
   return {
     connected: state.isConnected,

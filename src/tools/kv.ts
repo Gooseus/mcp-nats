@@ -328,11 +328,7 @@ export function registerKvTools(server: McpServer, js: JetStreamClient, jsm: Jet
           created: string;
         }> = [];
 
-        const watchOpts: Parameters<typeof kv.watch>[0] = {
-          initializedFn: () => {
-            // Called when all current values have been received
-          },
-        };
+        const watchOpts: Parameters<typeof kv.watch>[0] = {};
 
         if (key) watchOpts.key = key;
         if (include_history) watchOpts.include = KvWatchInclude.AllHistory;

@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } fr
 import { setupNats, teardownNats, getTestContext, createTestStream, getTool, publishTestMessages } from "../setup";
 import { registerConsumerTools } from "../../src/tools/consumers";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { AckPolicy, ConsumerConfig } from "nats";
 
 describe("Consumer Tools", () => {
   let server: McpServer;
@@ -16,10 +17,7 @@ describe("Consumer Tools", () => {
   });
 
   afterEach(async () => {
-    // Clean up all streams created during tests
-    for (const cleanup of cleanupFunctions) {
-      await cleanup();
-    }
+    for (const cleanup of cleanupFunctions) await cleanup();
     cleanupFunctions.length = 0;
   });
 
@@ -90,11 +88,10 @@ describe("Consumer Tools", () => {
       const cleanup = await createTestStream("CONSUMER_INFO_TEST", ["consumer.info.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Create consumer first
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_INFO_TEST", {
         durable_name: "info-test-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const infoTool = getTool(server, "nats_consumer_info");
@@ -134,15 +131,14 @@ describe("Consumer Tools", () => {
       const cleanup = await createTestStream("CONSUMER_LIST_TEST", ["consumer.list.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Create some consumers
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_LIST_TEST", {
         durable_name: "list-consumer-1",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
       await jsm.consumers.add("CONSUMER_LIST_TEST", {
         durable_name: "list-consumer-2",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const listTool = getTool(server, "nats_consumer_list");
@@ -183,11 +179,10 @@ describe("Consumer Tools", () => {
       const cleanup = await createTestStream("CONSUMER_DELETE_TEST", ["consumer.delete.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Create consumer first
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_DELETE_TEST", {
         durable_name: "delete-test-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const deleteTool = getTool(server, "nats_consumer_delete");
@@ -202,12 +197,11 @@ describe("Consumer Tools", () => {
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toContain("Deleted");
 
-      // Verify consumer is gone
       try {
         await jsm.consumers.info("CONSUMER_DELETE_TEST", "delete-test-consumer");
-        expect(true).toBe(false); // Should not reach here
+        expect(true).toBe(false);
       } catch (error) {
-        // Expected
+        expect(error).toBeDefined();
       }
     });
 
@@ -233,11 +227,10 @@ describe("Consumer Tools", () => {
       const cleanup = await createTestStream("CONSUMER_PAUSE_TEST", ["consumer.pause.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Create consumer first
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_PAUSE_TEST", {
         durable_name: "pause-test-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const pauseTool = getTool(server, "nats_consumer_pause");
@@ -260,10 +253,9 @@ describe("Consumer Tools", () => {
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_PAUSE_UNTIL", {
         durable_name: "pause-until-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Pause until 1 hour from now
       const pauseUntil = new Date(Date.now() + 3600000).toISOString();
 
       const pauseTool = getTool(server, "nats_consumer_pause");
@@ -286,14 +278,12 @@ describe("Consumer Tools", () => {
       const cleanup = await createTestStream("CONSUMER_RESUME_TEST", ["consumer.resume.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Create and pause consumer first
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_RESUME_TEST", {
         durable_name: "resume-test-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Pause it (requires a Date)
       await jsm.consumers.pause("CONSUMER_RESUME_TEST", "resume-test-consumer", new Date(Date.now() + 3600000));
 
       const resumeTool = getTool(server, "nats_consumer_resume");
@@ -312,22 +302,18 @@ describe("Consumer Tools", () => {
 
   describe("nats_consumer_fetch", () => {
     test("should fetch messages from a durable consumer", async () => {
-      // Arrange
       const cleanup = await createTestStream("CONSUMER_FETCH_TEST", ["consumer.fetch.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Publish some messages
       await publishTestMessages("consumer.fetch.messages", ["msg1", "msg2", "msg3"]);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Create a durable consumer
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_FETCH_TEST", {
         durable_name: "fetch-test-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Act
       const fetchTool = getTool(server, "nats_consumer_fetch");
       const result = await fetchTool.handler(
         {
@@ -338,7 +324,6 @@ describe("Consumer Tools", () => {
         {}
       );
 
-      // Assert
       expect(result.isError).toBeUndefined();
       const messages = JSON.parse(result.content[0].text);
       expect(Array.isArray(messages)).toBe(true);
@@ -350,7 +335,6 @@ describe("Consumer Tools", () => {
     });
 
     test("should limit message count", async () => {
-      // Arrange
       const cleanup = await createTestStream("CONSUMER_FETCH_LIMIT", ["consumer.fetchlimit.>"]);
       cleanupFunctions.push(cleanup);
 
@@ -360,10 +344,9 @@ describe("Consumer Tools", () => {
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_FETCH_LIMIT", {
         durable_name: "limit-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Act
       const fetchTool = getTool(server, "nats_consumer_fetch");
       const result = await fetchTool.handler(
         {
@@ -374,23 +357,20 @@ describe("Consumer Tools", () => {
         {}
       );
 
-      // Assert
       const messages = JSON.parse(result.content[0].text);
       expect(messages.length).toBe(2);
     });
 
     test("should return empty array when no messages available", async () => {
-      // Arrange
       const cleanup = await createTestStream("CONSUMER_FETCH_EMPTY", ["consumer.fetchempty.>"]);
       cleanupFunctions.push(cleanup);
 
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_FETCH_EMPTY", {
         durable_name: "empty-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Act
       const fetchTool = getTool(server, "nats_consumer_fetch");
       const result = await fetchTool.handler(
         {
@@ -401,18 +381,15 @@ describe("Consumer Tools", () => {
         {}
       );
 
-      // Assert
       expect(result.isError).toBeUndefined();
       const messages = JSON.parse(result.content[0].text);
       expect(messages).toEqual([]);
     });
 
     test("should handle non-existent consumer", async () => {
-      // Arrange
       const cleanup = await createTestStream("CONSUMER_FETCH_MISSING", ["consumer.fetchmissing.>"]);
       cleanupFunctions.push(cleanup);
 
-      // Act
       const fetchTool = getTool(server, "nats_consumer_fetch");
       const result = await fetchTool.handler(
         {
@@ -423,13 +400,11 @@ describe("Consumer Tools", () => {
         {}
       );
 
-      // Assert
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain("Error");
     });
 
     test("should acknowledge messages by default", async () => {
-      // Arrange
       const cleanup = await createTestStream("CONSUMER_FETCH_ACK", ["consumer.fetchack.>"]);
       cleanupFunctions.push(cleanup);
 
@@ -439,12 +414,11 @@ describe("Consumer Tools", () => {
       const { jsm } = getTestContext();
       await jsm.consumers.add("CONSUMER_FETCH_ACK", {
         durable_name: "ack-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const fetchTool = getTool(server, "nats_consumer_fetch");
 
-      // Act - First fetch
       const firstResult = await fetchTool.handler(
         {
           stream: "CONSUMER_FETCH_ACK",
@@ -454,11 +428,9 @@ describe("Consumer Tools", () => {
         {}
       );
 
-      // Assert first fetch got the messages
       const firstMessages = JSON.parse(firstResult.content[0].text);
       expect(firstMessages.length).toBe(2);
 
-      // Check consumer info to verify messages were acknowledged
       const consumerInfo = await jsm.consumers.info("CONSUMER_FETCH_ACK", "ack-consumer");
       expect(consumerInfo.num_pending).toBe(0);
       expect(consumerInfo.num_ack_pending).toBe(0);

@@ -312,7 +312,7 @@ export function registerJetstreamTools(
       try {
         let opts: PurgeOpts | undefined;
 
-        if(seq !== undefined) {
+        if (seq !== undefined) {
           opts = filter ? { seq, filter } : { seq };
         } else if (filter) {
           opts = { filter };

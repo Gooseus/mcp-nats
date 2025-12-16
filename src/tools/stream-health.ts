@@ -41,7 +41,6 @@ function assessHealth(
   const issues: string[] = [];
   let status: "healthy" | "degraded" | "unhealthy" = "healthy";
 
-  // Informational note if no consumers
   if (consumers.length === 0) {
     issues.push("No consumers configured");
     return { status: "healthy", issues };

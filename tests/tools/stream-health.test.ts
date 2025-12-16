@@ -9,6 +9,7 @@ import {
 } from "../setup";
 import { registerStreamHealthTools } from "../../src/tools/stream-health";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { AckPolicy, DeliverPolicy } from "nats";
 
 describe("Stream Health Tools", () => {
   let server: McpServer;
@@ -35,20 +36,20 @@ describe("Stream Health Tools", () => {
 
   describe("nats_stream_health", () => {
     test("should return stream basic info", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_BASIC_TEST", ["health.basic.>"]);
+
       cleanupFunctions.push(cleanup);
+
       await publishTestMessages("health.basic.msg", ["msg1", "msg2", "msg3"]);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "HEALTH_BASIC_TEST" }, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.stream.name).toBe("HEALTH_BASIC_TEST");
       expect(data.stream.messages).toBe(3);
       expect(data.stream.subjects).toContain("health.basic.>");
@@ -58,44 +59,43 @@ describe("Stream Health Tools", () => {
     });
 
     test("should return healthy status with no consumers", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_NO_CONSUMERS", ["health.nocon.>"]);
+
       cleanupFunctions.push(cleanup);
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "HEALTH_NO_CONSUMERS" }, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.consumers).toEqual([]);
       expect(data.health.status).toBe("healthy");
       expect(data.health.issues).toContain("No consumers configured");
     });
 
     test("should include consumer health details", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_WITH_CONSUMER", ["health.consumer.>"]);
+
       cleanupFunctions.push(cleanup);
+
       await publishTestMessages("health.consumer.msg", ["msg1", "msg2", "msg3"]);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const { jsm } = getTestContext();
       await jsm.consumers.add("HEALTH_WITH_CONSUMER", {
         durable_name: "health-test-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "HEALTH_WITH_CONSUMER" }, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.consumers.length).toBe(1);
       expect(data.consumers[0].name).toBe("health-test-consumer");
       expect(data.consumers[0].pending).toBe(3);
@@ -105,16 +105,18 @@ describe("Stream Health Tools", () => {
     });
 
     test("should detect unhealthy when consumer paused with pending messages", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_PAUSED", ["health.paused.>"]);
+
       cleanupFunctions.push(cleanup);
+
       await publishTestMessages("health.paused.msg", ["msg1", "msg2"]);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const { jsm } = getTestContext();
+
       await jsm.consumers.add("HEALTH_PAUSED", {
         durable_name: "paused-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
       await jsm.consumers.pause(
         "HEALTH_PAUSED",
@@ -123,13 +125,12 @@ describe("Stream Health Tools", () => {
       );
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "HEALTH_PAUSED" }, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.consumers[0].paused).toBe(true);
       expect(data.health.status).toBe("unhealthy");
       expect(data.health.issues.some((i: string) => i.toLowerCase().includes("paused"))).toBe(
@@ -138,37 +139,33 @@ describe("Stream Health Tools", () => {
     });
 
     test("should detect degraded when ack_pending exceeds threshold", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_ACK_PENDING", ["health.ackpending.>"]);
+
       cleanupFunctions.push(cleanup);
 
-      // Publish messages
       const messages = Array.from({ length: 10 }, (_, i) => `msg${i}`);
+
       await publishTestMessages("health.ackpending.msg", messages);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const { jsm, js } = getTestContext();
       await jsm.consumers.add("HEALTH_ACK_PENDING", {
         durable_name: "ack-pending-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Fetch messages without acking to create ack_pending
       const consumer = await js.consumers.get("HEALTH_ACK_PENDING", "ack-pending-consumer");
       const iter = await consumer.fetch({ max_messages: 5, expires: 2000 });
+
       let count = 0;
       for await (const msg of iter) {
-        // Don't ack - creates ack pending
         count++;
         if (count >= 5) break;
       }
 
-      // Wait for ack_pending to register
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act - with low threshold to trigger degraded
       const result = await tool.handler(
         {
           stream: "HEALTH_ACK_PENDING",
@@ -177,9 +174,10 @@ describe("Stream Health Tools", () => {
         {}
       );
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.consumers[0].ack_pending).toBeGreaterThan(0);
       expect(data.health.status).toBe("degraded");
       expect(
@@ -188,23 +186,23 @@ describe("Stream Health Tools", () => {
     });
 
     test("should detect unhealthy when lag exceeds threshold", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_LAG", ["health.lag.>"]);
+
       cleanupFunctions.push(cleanup);
 
       const messages = Array.from({ length: 50 }, (_, i) => `msg${i}`);
+
       await publishTestMessages("health.lag.msg", messages);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const { jsm } = getTestContext();
+
       await jsm.consumers.add("HEALTH_LAG", {
         durable_name: "lagging-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act - with low lag threshold
       const result = await tool.handler(
         {
           stream: "HEALTH_LAG",
@@ -213,9 +211,10 @@ describe("Stream Health Tools", () => {
         {}
       );
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.health.status).toBe("unhealthy");
       expect(data.health.issues.some((i: string) => i.toLowerCase().includes("lag"))).toBe(
         true
@@ -223,27 +222,25 @@ describe("Stream Health Tools", () => {
     });
 
     test("should return healthy when consumers are caught up", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_HEALTHY", ["health.healthy.>"]);
+
       cleanupFunctions.push(cleanup);
 
       const { jsm, js } = getTestContext();
 
-      // Create consumer with deliver_policy: new so it starts with no pending
       await jsm.consumers.add("HEALTH_HEALTHY", {
         durable_name: "healthy-consumer",
-        ack_policy: "explicit" as const,
-        deliver_policy: "new" as const,
+        ack_policy: AckPolicy.Explicit,
+        deliver_policy: DeliverPolicy.New,
       });
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "HEALTH_HEALTHY" }, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.health.status).toBe("healthy");
       expect(
         data.health.issues.filter((i: string) => !i.includes("No consumers")).length
@@ -251,20 +248,16 @@ describe("Stream Health Tools", () => {
     });
 
     test("should return error for non-existent stream", async () => {
-      // Arrange
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "NON_EXISTENT_STREAM" }, {});
 
-      // Assert
       expect(result.isError).toBe(true);
       expect(result.content[0].text.toLowerCase()).toContain("error");
     });
 
     test("should calculate lag correctly for multiple consumers", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_MULTI_CONSUMER", ["health.multi.>"]);
+
       cleanupFunctions.push(cleanup);
 
       await publishTestMessages("health.multi.msg", ["msg1", "msg2", "msg3", "msg4", "msg5"]);
@@ -272,19 +265,16 @@ describe("Stream Health Tools", () => {
 
       const { jsm, js } = getTestContext();
 
-      // Consumer 1: will be caught up
       await jsm.consumers.add("HEALTH_MULTI_CONSUMER", {
         durable_name: "consumer-1",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Consumer 2: will be lagging
       await jsm.consumers.add("HEALTH_MULTI_CONSUMER", {
         durable_name: "consumer-2",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
-      // Fetch and ack all messages for consumer-1
       const c1 = await js.consumers.get("HEALTH_MULTI_CONSUMER", "consumer-1");
       const iter = await c1.fetch({ max_messages: 5, expires: 2000 });
       for await (const msg of iter) {
@@ -292,13 +282,12 @@ describe("Stream Health Tools", () => {
       }
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act
       const result = await tool.handler({ stream: "HEALTH_MULTI_CONSUMER" }, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.consumers.length).toBe(2);
 
       const consumer1 = data.consumers.find((c: any) => c.name === "consumer-1");
@@ -309,23 +298,22 @@ describe("Stream Health Tools", () => {
     });
 
     test("should use custom thresholds", async () => {
-      // Arrange
       const cleanup = await createTestStream("HEALTH_CUSTOM_THRESH", ["health.custom.>"]);
+
       cleanupFunctions.push(cleanup);
 
       const messages = Array.from({ length: 20 }, (_, i) => `msg${i}`);
+
       await publishTestMessages("health.custom.msg", messages);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const { jsm } = getTestContext();
       await jsm.consumers.add("HEALTH_CUSTOM_THRESH", {
         durable_name: "custom-consumer",
-        ack_policy: "explicit" as const,
+        ack_policy: AckPolicy.Explicit,
       });
 
       const tool = getTool(server, "nats_stream_health");
-
-      // Act - with high thresholds so 20 messages is still healthy
       const result = await tool.handler(
         {
           stream: "HEALTH_CUSTOM_THRESH",
@@ -335,9 +323,10 @@ describe("Stream Health Tools", () => {
         {}
       );
 
-      // Assert
       expect(result.isError).toBeUndefined();
+
       const data = JSON.parse(result.content[0].text);
+
       expect(data.health.status).toBe("healthy");
     });
   });

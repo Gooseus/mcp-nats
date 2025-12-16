@@ -11,7 +11,6 @@ describe("Core Tools", () => {
     await setupNats();
     const { nc } = getTestContext();
 
-    // Also initialize the connection module for health tool
     await createNatsConnection();
 
     server = new McpServer({ name: "test-server", version: "1.0.0" });
@@ -27,36 +26,30 @@ describe("Core Tools", () => {
     test("should publish a message to a subject", async () => {
       const { nc } = getTestContext();
 
-      // Set up a subscriber to receive the message
       const receivedMessages: string[] = [];
       const sub = nc.subscribe("test.publish.basic");
 
-      // Start collecting messages asynchronously
       const collectPromise = (async () => {
         for await (const msg of sub) {
           receivedMessages.push(decode(msg.data));
-          break; // Only collect one message
+          break;
         }
       })();
 
-      // Give subscriber time to set up
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Call the tool handler directly
       const publishTool = getTool(server, "nats_publish");
       const result = await publishTool.handler(
         { subject: "test.publish.basic", payload: "Hello, NATS!" },
         {}
       );
 
-      // Wait for message to be received
       await Promise.race([
         collectPromise,
         new Promise((resolve) => setTimeout(resolve, 500)),
       ]);
       sub.unsubscribe();
 
-      // Verify result
       expect(result.content[0].text).toContain("Successfully published");
       expect(receivedMessages).toContain("Hello, NATS!");
     });
@@ -64,7 +57,6 @@ describe("Core Tools", () => {
     test("should publish a message with headers", async () => {
       const { nc } = getTestContext();
 
-      // Set up subscriber
       let receivedHeaders: Record<string, string> = {};
       const sub = nc.subscribe("test.publish.headers");
 
@@ -104,13 +96,10 @@ describe("Core Tools", () => {
 
   describe("nats_server_info", () => {
     test("should return server connection information", async () => {
-      // Arrange
       const serverInfoTool = getTool(server, "nats_server_info");
 
-      // Act
       const result = await serverInfoTool.handler({}, {});
 
-      // Assert
       expect(result.isError).toBeUndefined();
       const info = JSON.parse(result.content[0].text);
       expect(info.server_id).toBeDefined();
@@ -120,13 +109,10 @@ describe("Core Tools", () => {
     });
 
     test("should include server name and protocol version", async () => {
-      // Arrange
       const serverInfoTool = getTool(server, "nats_server_info");
 
-      // Act
       const result = await serverInfoTool.handler({}, {});
 
-      // Assert
       const info = JSON.parse(result.content[0].text);
       expect(typeof info.server_name).toBe("string");
       expect(typeof info.proto).toBe("number");
@@ -136,29 +122,23 @@ describe("Core Tools", () => {
 
   describe("nats_connection_health", () => {
     test("should return connection health status", async () => {
-      // Arrange
       const healthTool = getTool(server, "nats_connection_health");
-
-      // Act
       const result = await healthTool.handler({}, {});
-
-      // Assert
+      
       expect(result.isError).toBeUndefined();
+
       const health = JSON.parse(result.content[0].text);
+
       expect(health.connected).toBe(true);
       expect(typeof health.reconnectCount).toBe("number");
       expect(health.reconnectCount).toBeGreaterThanOrEqual(0);
     });
 
     test("should include reconnect tracking fields", async () => {
-      // Arrange
       const healthTool = getTool(server, "nats_connection_health");
-
-      // Act
       const result = await healthTool.handler({}, {});
-
-      // Assert
       const health = JSON.parse(result.content[0].text);
+
       expect("connected" in health).toBe(true);
       expect("server" in health).toBe(true);
       expect("reconnectCount" in health).toBe(true);
@@ -170,7 +150,6 @@ describe("Core Tools", () => {
     test("should perform request-reply pattern", async () => {
       const { nc } = getTestContext();
 
-      // Set up a responder
       const sub = nc.subscribe("test.request.basic");
       const responderPromise = (async () => {
         for await (const msg of sub) {
@@ -200,7 +179,6 @@ describe("Core Tools", () => {
     test("should handle request timeout", async () => {
       const requestTool = getTool(server, "nats_request");
 
-      // Request to a subject with no responder
       const result = await requestTool.handler(
         { subject: "test.request.timeout", payload: "Hello", timeout: 100 },
         {}
